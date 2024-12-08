@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>졸음 감지기</title>
+    <script src="smartphone-camera-js"></script>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            background-color: #f0f0f0; 
+        }
+        #video-container {
+            text-align: center;
+        }
+        #video-stream {
+            max-width: 100%;
+            border: 2px solid black;
+        }
+        #drowsy-alert {
+            color: red;
+            font-weight: bold;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="video-container">
+        <h1>졸음 감지기</h1>
+        <img id="video-stream" src="" alt="Video Stream">
+        <div id="drowsy-alert">졸음 감지됨!</div>
+        
+        <div>
+            <label>민감도 설정:</label>
+            <select id="sensitivity">
+                <option value="0.14">1 단계</option>
+                <option value="0.16" selected>2 단계</option>
+                <option value="0.22">3 단계</option>
+            </select>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const videoStream = document.getElementById('video-stream');
+        const drowsyAlert = document.getElementById('drowsy-alert');
+        const sensitivitySelect = document.getElementById('sensitivity');
+
+        socket.on('connect', () => {
+            console.log('Connected to server');
+            socket.emit('start_stream');
+        });
+
+        socket.on('video_frame', (data) => {
+            videoStream.src = 'data:image/jpeg;base64,' + data.frame;
+            
+            if (data.is_drowsy) {
+                drowsyAlert.style.display = 'block';
+            } else {
+                drowsyAlert.style.display = 'none';
+            }
+        });
+
+        sensitivitySelect.addEventListener('change', (e) => {
+            socket.emit('update_sensitivity', parseFloat(e.target.value));
+        });
+    </script>
+</body>
+</html>
